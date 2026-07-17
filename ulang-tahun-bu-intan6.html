@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selamat Ulang Tahun, Bu Intan Siti Hafifah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky: #8FCBEF;
+    --sky-light: #DFF3FC;
+    --pink: #BFE0F5;
+    --pink-light: #EAF7FD;
+    --cream: #F7FBFE;
+    --ink: #2E4A66;
+    --ink-soft: #5D7A99;
+    --gold: #E7BE93;
+    --gold-bright: #F3DAB6;
+    --white: #FFFFFF;
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'Poppins', sans-serif;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html, body{ height:100%; }
+
+  body{
+    font-family: var(--font-body);
+    color: var(--ink);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+
+  button{ font-family: inherit; }
+
+  /* ---------- lattice canvas background (fixed) ---------- */
+  #lattice{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background: linear-gradient(160deg, var(--sky-light) 0%, var(--pink-light) 55%, var(--pink) 100%);
+  }
+
+  #confetti-canvas{
+    position:fixed;
+    inset:0;
+    z-index:50;
+    pointer-events:none;
+  }
+
+  /* ---------- app / screens (click-through navigation) ---------- */
+  #app{
+    position:relative;
+    height:100vh;
+    height:100dvh;
+    overflow:hidden;
+  }
+
+  .screen{
+    position:absolute;
+    inset:0;
+    z-index:5;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:safe center;
+    padding: 8vh 6vw 12vh;
+    opacity:0;
+    pointer-events:none;
+    transform: translateX(60px) scale(0.98);
+    transition: opacity .55s ease, transform .55s ease;
+    overflow-y:auto;
+  }
+  .screen.active{
+    opacity:1;
+    pointer-events:auto;
+    transform: translateX(0) scale(1);
+  }
+  .screen.exit-left{
+    transform: translateX(-60px) scale(0.98);
+  }
+
+  .eyebrow{
+    font-size: 0.72rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: #4F8FC4;
+    font-weight: 500;
+  }
+
+  .section-head{ text-align:center; margin-bottom: 44px; }
+  .section-head h2{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    color: var(--ink);
+    margin-top: 10px;
+  }
+
+  /* ---------- nav dots ---------- */
+  #nav-dots{
+    position:fixed;
+    bottom: 22px;
+    left:50%;
+    transform: translateX(-50%);
+    z-index:70;
+    display:flex;
+    gap: 12px;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(6px);
+    padding: 10px 16px;
+    border-radius: 100px;
+    box-shadow: 0 6px 18px rgba(75,64,102,0.1);
+  }
+  .dot{
+    width:9px; height:9px;
+    border-radius:50%;
+    background: #CFE7F5;
+    border: none;
+    cursor: not-allowed;
+    padding:0;
+    transition: all .3s ease;
+  }
+  .dot.unlocked{ cursor:pointer; background: #E7BE93; }
+  .dot.current{ background: #4F8FC4; width:26px; border-radius:100px; }
+
+  /* ---------- buttons ---------- */
+  .btn-primary{
+    padding: 15px 38px;
+    border-radius: 100px;
+    border: 1px solid var(--gold);
+    background: linear-gradient(135deg, #FFFFFF, var(--gold-bright));
+    color: #8A5A3C;
+    font-size: 0.98rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform .3s ease, box-shadow .3s ease;
+  }
+  .btn-primary:hover{ transform: translateY(-3px); box-shadow: 0 14px 30px rgba(231,190,147,0.4); }
+  .btn-primary:focus-visible{ outline: 2px solid #8A5A3C; outline-offset: 4px; }
+  .btn-primary::after{
+    content:'';
+    position:absolute; top:0; left:-120%; width:60%; height:100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.7), transparent);
+    transform: skewX(-20deg);
+    transition: left .6s ease;
+  }
+  .btn-primary:hover::after{ left:130%; }
+
+  .btn-ghost{
+    margin-top: 14px;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    letter-spacing: 0.05em;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+    opacity: 0.75;
+  }
+  .btn-ghost:hover{ opacity:1; }
+
+  .screen-actions{
+    margin-top: 40px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  /* ---------- LANDING ---------- */
+  #screen-landing{ text-align:center; gap: 26px; }
+  #typewriter-wrap{ min-height: 1.4em; }
+  h1.main-title{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 6.5vw, 4.2rem);
+    color: var(--ink);
+    line-height: 1.15;
+  }
+  #typewriter-cursor{
+    display:inline-block; width:3px; background: #4F8FC4; margin-left:4px;
+    animation: blink 0.9s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .subtitle{
+    font-size: clamp(0.92rem, 1.6vw, 1.08rem);
+    color: var(--ink-soft);
+    max-width: 500px;
+    font-weight: 300;
+    opacity:0;
+  }
+  .subtitle.show{ animation: fadeUp .9s ease forwards; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  .btn-primary.hidden-init{ opacity:0; pointer-events:none; }
+  .btn-primary.show{ animation: fadeUp .9s ease forwards; pointer-events:auto; }
+
+  /* floating soft blobs for landing atmosphere */
+  .float-shape{
+    position:absolute;
+    border-radius:50%;
+    filter: blur(2px);
+    opacity:0.5;
+    pointer-events:none;
+    animation: floatY 6s ease-in-out infinite;
+  }
+  @keyframes floatY{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-18px);} }
+
+  /* ---------- GALLERY (flip cards) ---------- */
+  #screen-gallery{ padding-top: 6vh; }
+  .gallery-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 22px;
+    max-width: 980px;
+    width:100%;
+  }
+  .flip-card{
+    perspective: 1200px;
+    height: 210px;
+    cursor:pointer;
+  }
+  .flip-card:focus-visible .flip-inner{ outline: 2px solid var(--gold); outline-offset: 3px; }
+  .flip-inner{
+    position:relative;
+    width:100%; height:100%;
+    transition: transform .7s cubic-bezier(.4,.2,.2,1);
+    transform-style: preserve-3d;
+  }
+  .flip-card.flipped .flip-inner{ transform: rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    border-radius:18px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding: 20px;
+  }
+  .flip-front{
+    background: linear-gradient(155deg, #ffffff, var(--sky-light));
+    border: 1px solid rgba(201,140,168,0.25);
+    box-shadow: 0 10px 26px rgba(75,64,102,0.08);
+  }
+  .flip-front svg{ width:34px; height:34px; margin-bottom:14px; color:#4F8FC4; }
+  .flip-front .tag{
+    font-size:0.68rem; letter-spacing:0.18em; text-transform:uppercase;
+    color:#4F8FC4; font-weight:500;
+  }
+  .flip-front .hint{
+    margin-top:10px; font-size:0.7rem; color: var(--ink-soft); opacity:0.7;
+  }
+  .flip-back{
+    background: linear-gradient(160deg, var(--pink), var(--sky));
+    transform: rotateY(180deg);
+    box-shadow: 0 14px 30px rgba(75,64,102,0.16);
+  }
+  .flip-back h3{
+    font-family: var(--font-display);
+    font-weight:600;
+    font-size: 1rem;
+    color: #5A3D50;
+    margin-bottom:8px;
+  }
+  .flip-back p{
+    font-size: 0.82rem;
+    line-height:1.6;
+    color: #5A3D50;
+    font-weight:400;
+  }
+  .gallery-progress{
+    margin-top: 26px;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.03em;
+  }
+
+  /* ---------- MAIN CARD ---------- */
+  #screen-card{ text-align:center; }
+  .plaque{
+    position:relative;
+    width: min(520px, 90vw);
+    padding: 50px 36px;
+    border-radius: 24px;
+    background: linear-gradient(165deg, #ffffff, var(--sky-light));
+    border: 1px solid rgba(231,190,147,0.5);
+    overflow:hidden;
+    cursor:pointer;
+    box-shadow: 0 20px 50px rgba(75,64,102,0.12);
+    transition: transform .35s ease, box-shadow .35s ease;
+  }
+  .plaque:hover{ transform: translateY(-4px); box-shadow: 0 26px 60px rgba(75,64,102,0.18); }
+  .plaque::before{
+    content:''; position:absolute; inset:8px;
+    border: 1px solid rgba(231,190,147,0.35);
+    border-radius: 18px;
+    pointer-events:none;
+  }
+  .plaque .shimmer-sweep{
+    position:absolute; top:0; left:-150%; width:60%; height:100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.85), transparent);
+    transform: skewX(-20deg);
+    animation: sweep 5s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes sweep{ 0%{left:-150%;} 45%{left:130%;} 100%{left:130%;} }
+  .plaque .eyebrow{ margin-bottom:16px; }
+  .plaque h2.name{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size: clamp(1.6rem, 4.4vw, 2.3rem);
+    color: var(--ink);
+  }
+  .plaque .divider{ width:56px; height:1px; background: var(--gold); margin: 18px auto; opacity:0.8; }
+  .plaque .date{
+    font-size:0.95rem; letter-spacing:0.15em; color:#4F8FC4; text-transform:uppercase; margin-bottom:18px;
+  }
+  .plaque .plaque-note{
+    font-size:0.9rem; line-height:1.75; font-weight:300; color: var(--ink-soft);
+  }
+  .plaque .tap-hint{
+    margin-top: 18px;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #4F8FC4;
+    opacity: 0.7;
+  }
+  .secret-note{
+    max-width: 520px;
+    margin-top: 26px;
+    text-align:center;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--ink-soft);
+    font-style: italic;
+    font-family: var(--font-display);
+    max-height: 0;
+    opacity:0;
+    overflow:hidden;
+    transition: max-height .6s ease, opacity .6s ease;
+  }
+  .secret-note.show{ max-height: 200px; opacity:1; margin-top: 26px; }
+
+  /* ---------- CLOSING LETTER ---------- */
+  #screen-closing{ align-items:center; }
+  .letter{
+    max-width: 640px;
+    width:100%;
+    background: rgba(255,255,255,0.75);
+    border-left: 3px solid var(--gold);
+    padding: 36px clamp(18px, 4vw, 46px);
+    border-radius: 6px;
+    box-shadow: 0 16px 40px rgba(75,64,102,0.1);
+  }
+  .letter p{
+    font-size: clamp(0.92rem, 1.6vw, 1rem);
+    line-height: 1.9;
+    font-weight: 300;
+    color: var(--ink);
+    margin-bottom: 18px;
+  }
+  .letter .signature{
+    margin-top: 28px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.15rem;
+    color: #4F8FC4;
+  }
+  .letter .signature small{
+    display:block;
+    font-family: var(--font-body);
+    font-style: normal;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+
+  @media (max-width: 560px){
+    .screen{ padding: 7vh 6vw 14vh; }
+    .plaque{ padding: 40px 24px; }
+    .flip-card{ height: 190px; }
+  }
+
+  /* ---------- side photos (muncul bertahap) ---------- */
+  .side-photo{
+    position: fixed;
+    width: 204px;
+    height: 252px;
+    border-radius: 17px;
+    overflow: hidden;
+    background: var(--white);
+    border: 6px solid var(--white);
+    box-shadow: 0 16px 36px rgba(46,74,102,0.22);
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.82) rotate(var(--rot, 0deg));
+    transition: opacity .9s ease, transform .9s cubic-bezier(.2,.8,.3,1);
+  }
+  .side-photo.show{
+    opacity: 1;
+    transform: scale(1) rotate(var(--rot, 0deg));
+  }
+  .side-photo img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  #photo-left-1{ left: 3vw; top: 14%; --rot: -6deg; }
+  #photo-left-2{ left: 2vw; top: 54%; --rot: 4deg; }
+  #photo-right-1{ right: 3vw; top: 13%; --rot: 6deg; }
+  #photo-right-2{ right: 2vw; top: 53%; --rot: -5deg; }
+
+  @media (max-width: 1200px){
+    .side-photo{ display: none; }
+  }
+
+  /* ---------- mobile photo stack (menggantikan side-photo di layar sempit) ---------- */
+  .mobile-photo-stack{
+    display: none;
+  }
+  @media (max-width: 1200px){
+    .mobile-photo-stack{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      margin-top: 34px;
+      margin-bottom: 6px;
+    }
+    .mobile-photo{
+      width: min(78vw, 300px);
+      aspect-ratio: 4/5;
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--white);
+      border: 7px solid var(--white);
+      box-shadow: 0 14px 32px rgba(46,74,102,0.2);
+      opacity: 0;
+      transform: translateY(24px) scale(0.94) rotate(var(--mrot, 0deg));
+      transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.3,1);
+    }
+    .mobile-photo.show{
+      opacity: 1;
+      transform: translateY(0) scale(1) rotate(var(--mrot, 0deg));
+    }
+    .mobile-photo img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    #mphoto-1{ --mrot: -3deg; }
+    #mphoto-2{ --mrot: 2deg; }
+    #mphoto-3{ --mrot: -2deg; }
+    #mphoto-4{ --mrot: 3deg; }
+  }
+
+</style>
+</head>
+<body>
+
+<canvas id="lattice"></canvas>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- ============ SIDE PHOTOS (muncul bertahap saat kartu dibuka) ============ -->
+<div class="side-photo" id="photo-left-1"><img src="foto1.jpeg" alt="Kenangan bersama Bu Intan 1"></div>
+<div class="side-photo" id="photo-left-2"><img src="foto3.jpeg" alt="Kenangan bersama Bu Intan 3"></div>
+<div class="side-photo" id="photo-right-1"><img src="foto2.jpeg" alt="Kenangan bersama Bu Intan 2"></div>
+<div class="side-photo" id="photo-right-2"><img src="foto4.jpeg" alt="Kenangan bersama Bu Intan 4"></div>
+
+<audio id="bg-music" loop preload="auto">
+  <source src="LaguHBDGenHalilintar.mp3" type="audio/mpeg">
+</audio>
+
+<div id="nav-dots" role="tablist" aria-label="Navigasi halaman"></div>
+
+<div id="app">
+
+  <!-- ============ SCREEN 1: LANDING ============ -->
+  <section class="screen active" id="screen-landing" data-index="0">
+    <p class="eyebrow">Sebuah Kejutan Kecil</p>
+    <div id="typewriter-wrap">
+      <h1 class="main-title" id="typewriter-target" aria-live="polite"></h1>
+    </div>
+    <p class="subtitle" id="landing-subtitle">Untuk walikelas kami yang udah nemenin dari masi menjadi anak bebek (kelas 10)
+sampai agit ( kelas 12) 😎 keren berwibawa dan bijaksana.</p>
+    <button class="btn-primary hidden-init" id="open-surprise">🎁 Buka Kejutan</button>
+  </section>
+
+  <!-- ============ SCREEN 2: GALLERY (flip cards) ============ -->
+  <section class="screen" id="screen-gallery" data-index="1">
+    <div class="section-head">
+      <p class="eyebrow">Kumpulan Rasa</p>
+      <h2>Tap Setiap Kartu untuk Membukanya</h2>
+    </div>
+    <div class="gallery-grid">
+
+      <div class="flip-card" tabindex="0" role="button" aria-label="Buka kartu terima kasih">
+        <div class="flip-inner">
+          <div class="flip-face flip-front">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2 21 7v10l-9 5-9-5V7Z"/></svg>
+            <span class="tag">❤️</span>
+            <span class="hint">Tap untuk membuka</span>
+          </div>
+          <div class="flip-face flip-back">
+            <h3> kami xentralingua doain ustazah segera mendapat jodoh!😆</h3>
+            <!-- EDIT DI SINI: ganti pesan sesuai keinginanmu -->
+          
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" tabindex="0" role="button" aria-label="Buka kartu doa dan harapan">
+        <div class="flip-inner">
+          <div class="flip-face flip-front">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2 21 7v10l-9 5-9-5V7Z"/></svg>
+            <span class="tag">💜</span>
+            <span class="hint">Tap untuk membuka</span>
+          </div>
+          <div class="flip-face flip-back">
+            <h3>thank you for guru kami yg tersabar, tergeulis, terlucuk, tersabar lagi, dan terkeren hehe wish u all the best thing in this universe!</h3>
+            <!-- EDIT DI SINI -->
+            
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" tabindex="0" role="button" aria-label="Buka kartu kenangan">
+        <div class="flip-inner">
+          <div class="flip-face flip-front">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2 21 7v10l-9 5-9-5V7Z"/></svg>
+            <span class="tag">💛</span>
+            <span class="hint">Tap untuk membuka</span>
+          </div>
+          <div class="flip-face flip-back">
+            <h3> zah.. kangen.. SEMOGA KTA SEMUA BISA REUNI SOON AND DO IMMERSION PART3 YA ZAH</h3>
+            <!-- EDIT DI SINI -->
+            
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" tabindex="0" role="button" aria-label="Buka kartu inspirasi">
+        <div class="flip-inner">
+          <div class="flip-face flip-front">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2 21 7v10l-9 5-9-5V7Z"/></svg>
+            <span class="tag">💙</span>
+            <span class="hint">Tap untuk membuka</span>
+          </div>
+          <div class="flip-face flip-back">
+            <h3>semogaaaaa usatzahhh alwaysss happyyyy yaaaaa</h3>
+            <!-- EDIT DI SINI -->
+            
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============ MOBILE PHOTO STACK (tampil vertikal di HP, di bawah kartu) ============ -->
+    <div class="mobile-photo-stack" id="mobile-photo-stack">
+      <div class="mobile-photo" id="mphoto-1"><img src="foto1.jpeg" alt="Kenangan bersama Bu Intan 1"></div>
+      <div class="mobile-photo" id="mphoto-2"><img src="foto2.jpeg" alt="Kenangan bersama Bu Intan 2"></div>
+      <div class="mobile-photo" id="mphoto-3"><img src="foto3.jpeg" alt="Kenangan bersama Bu Intan 3"></div>
+      <div class="mobile-photo" id="mphoto-4"><img src="foto4.jpeg" alt="Kenangan bersama Bu Intan 4"></div>
+    </div>
+
+    <p class="gallery-progress" id="gallery-progress">0 dari 4 kartu dibuka</p>
+    <div class="screen-actions">
+      <button class="btn-primary" data-next>Lanjut ke Kartu Ucapan</button>
+      <button class="btn-ghost" data-prev>← Kembali</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 3: MAIN CARD ============ -->
+  <section class="screen" id="screen-card" data-index="2">
+    <div class="plaque" id="plaque" tabindex="0" role="button" aria-label="Ketuk untuk pesan rahasia">
+      <div class="shimmer-sweep"></div>
+      <p class="eyebrow">Kartu Ucapan</p>
+      <h2 class="name">Intan Siti Hafifah</h2>
+      <div class="divider"></div>
+      <p class="date">10 Juli 1994</p>
+      <p class="plaque-note">Barakallahu fii umrik, happy birthday, saeng-il chukhahae ustazah kesayangan kamiiii, thank you for always being our support system❤️</p>
+      <p class="tap-hint">✨ Ketuk kartu ini</p>
+    </div>
+    <p class="secret-note" id="secret-note">
+      <!-- EDIT DI SINI -->
+      "Pesan rahasia":  In another life kita lagi belajar biologi sekelas sambil nunggu altop dan abdu debatin soal past paper🥺 
+      bytheway zah ini bouquet online dari kami ya zah hehe 
+      https://bit.ly/bouquett
+    </p>
+    <div class="screen-actions">
+      <button class="btn-primary" data-next>The End</button>
+      <button class="btn-ghost" data-prev>← Kembali</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 4: CLOSING ============ -->
+
+    <div class="section-head">
+
+
+    </div>
+
+
+      </div>
+    </div>
+    <div class="screen-actions">
+      <button class="btn-primary" id="final-celebrate">🎉 Rayakan Sekali Lagi</button>
+      <button class="btn-ghost" data-prev>← Kembali</button>
+      <button class="btn-ghost" data-restart>Mulai dari Awal</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= LATTICE BACKGROUND ================= */
+  const latticeCanvas = document.getElementById('lattice');
+  const lctx = latticeCanvas.getContext('2d');
+  let W, H, nodes = [];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resizeLattice(){
+    W = latticeCanvas.width = window.innerWidth;
+    H = latticeCanvas.height = window.innerHeight;
+  }
+  function initNodes(){
+    const count = Math.max(30, Math.min(80, Math.floor(window.innerWidth / 20)));
+    nodes = [];
+    for(let i=0;i<count;i++){
+      nodes.push({
+        x: Math.random()*W, y: Math.random()*H,
+        vx: (Math.random()-0.5)*0.12, vy: (Math.random()-0.5)*0.12,
+        r: Math.random()*1.6 + 0.9
+      });
+    }
+  }
+  function drawLattice(){
+    lctx.clearRect(0,0,W,H);
+    const linkDist = 130;
+    for(let i=0;i<nodes.length;i++){
+      const n = nodes[i];
+      if(!reduceMotion){
+        n.x += n.vx; n.y += n.vy;
+        if(n.x < 0 || n.x > W) n.vx *= -1;
+        if(n.y < 0 || n.y > H) n.vy *= -1;
+      }
+      for(let j=i+1;j<nodes.length;j++){
+        const m = nodes[j];
+        const dx = n.x-m.x, dy = n.y-m.y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        if(dist < linkDist){
+          lctx.strokeStyle = `rgba(201,140,168,${0.14*(1-dist/linkDist)})`;
+          lctx.lineWidth = 1;
+          lctx.beginPath(); lctx.moveTo(n.x,n.y); lctx.lineTo(m.x,m.y); lctx.stroke();
+        }
+      }
+    }
+    for(const n of nodes){
+      lctx.beginPath(); lctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      lctx.fillStyle = 'rgba(255,255,255,0.9)';
+      lctx.fill();
+    }
+    if(!reduceMotion) requestAnimationFrame(drawLattice);
+  }
+  function setupLattice(){ resizeLattice(); initNodes(); drawLattice(); }
+  window.addEventListener('resize', () => { resizeLattice(); initNodes(); if(reduceMotion) drawLattice(); });
+  setupLattice();
+
+  /* ================= CONFETTI ================= */
+  const confettiCanvas = document.getElementById('confetti-canvas');
+  const cctx = confettiCanvas.getContext('2d');
+  let confettiPieces = [], confettiRunning = false;
+  function resizeConfetti(){ confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; }
+  resizeConfetti();
+  window.addEventListener('resize', resizeConfetti);
+  const colors = ['#E7BE93', '#F3DAB6', '#8FCBEF', '#BFE0F5', '#DFF3FC'];
+
+  function makePiece(){
+    const roll = Math.random();
+    return {
+      x: Math.random()*confettiCanvas.width, y: -20 - Math.random()*confettiCanvas.height*0.3,
+      size: Math.random()*8+5, speedY: Math.random()*1.6+1.2, speedX: (Math.random()-0.5)*1.2,
+      rotation: Math.random()*360, rotationSpeed: (Math.random()-0.5)*4,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      shape: roll < 0.4 ? 'star' : (roll < 0.75 ? 'hex' : 'dot'),
+      opacity: 1, life: 0
+    };
+  }
+  function drawStar(ctx,size){
+    ctx.beginPath();
+    for(let i=0;i<5;i++){
+      const angle = (Math.PI*2/5)*i - Math.PI/2;
+      ctx.lineTo(Math.cos(angle)*size, Math.sin(angle)*size);
+      const ia = angle + Math.PI/5;
+      ctx.lineTo(Math.cos(ia)*size*0.45, Math.sin(ia)*size*0.45);
+    }
+    ctx.closePath();
+  }
+  function drawHex(ctx,size){
+    ctx.beginPath();
+    for(let i=0;i<6;i++){
+      const angle=(Math.PI/3)*i;
+      const px=Math.cos(angle)*size, py=Math.sin(angle)*size;
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.closePath();
+  }
+  function confettiTick(){
+    cctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+    confettiPieces.forEach(p=>{
+      p.y += p.speedY; p.x += p.speedX; p.rotation += p.rotationSpeed; p.life++;
+      if(p.life > 260) p.opacity = Math.max(0, p.opacity - 0.02);
+      cctx.save(); cctx.translate(p.x,p.y); cctx.rotate(p.rotation*Math.PI/180); cctx.globalAlpha = p.opacity;
+      cctx.fillStyle = p.color;
+      if(p.shape==='star'){ drawStar(cctx,p.size); cctx.fill(); }
+      else if(p.shape==='hex'){ cctx.strokeStyle=p.color; cctx.lineWidth=1.5; drawHex(cctx,p.size*0.7); cctx.stroke(); }
+      else { cctx.beginPath(); cctx.arc(0,0,p.size*0.35,0,Math.PI*2); cctx.fill(); }
+      cctx.restore();
+    });
+    confettiPieces = confettiPieces.filter(p => p.y < confettiCanvas.height+40 && p.opacity>0);
+    if(confettiPieces.length>0) requestAnimationFrame(confettiTick); else confettiRunning=false;
+  }
+  function burstConfetti(count, originX, originY){
+    for(let i=0;i<count;i++){
+      const p = makePiece();
+      if(originX !== undefined){ p.x = originX; p.y = originY; p.speedY = Math.random()*1.2+0.6; }
+      confettiPieces.push(p);
+    }
+    if(!confettiRunning){ confettiRunning = true; confettiTick(); }
+  }
+
+  /* ================= TYPEWRITER ================= */
+  const target = document.getElementById('typewriter-target');
+  const fullText = "Happy Birthday, Zah Intan!";
+  const subtitle = document.getElementById('landing-subtitle');
+  const openBtn = document.getElementById('open-surprise');
+  let idx = 0;
+  function typeStep(){
+    if(idx <= fullText.length){
+      target.innerHTML = fullText.slice(0, idx) + '<span id="typewriter-cursor"></span>';
+      idx++;
+      setTimeout(typeStep, 55);
+    } else {
+      subtitle.classList.add('show');
+      setTimeout(() => { openBtn.classList.remove('hidden-init'); openBtn.classList.add('show'); }, 400);
+    }
+  }
+  setTimeout(typeStep, 500);
+
+  /* ================= SCREEN NAVIGATION ================= */
+  const screens = Array.from(document.querySelectorAll('.screen'));
+  const dotsContainer = document.getElementById('nav-dots');
+  let current = 0;
+  let maxUnlocked = 0;
+
+  screens.forEach((s, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'dot' + (i === 0 ? ' unlocked current' : '');
+    dot.setAttribute('aria-label', 'Ke halaman ' + (i+1));
+    dot.addEventListener('click', () => { if(i <= maxUnlocked) goTo(i); });
+    dotsContainer.appendChild(dot);
+  });
+
+  function updateDots(){
+    Array.from(dotsContainer.children).forEach((dot, i) => {
+      dot.classList.toggle('current', i === current);
+      dot.classList.toggle('unlocked', i <= maxUnlocked);
+    });
+  }
+
+  function goTo(index){
+    if(index === current) return;
+    screens[current].classList.remove('active');
+    screens[current].classList.add('exit-left');
+    screens[index].classList.remove('exit-left');
+    // reset scroll of target screen
+    screens[index].scrollTop = 0;
+    requestAnimationFrame(() => {
+      screens[index].classList.add('active');
+      setTimeout(() => screens[current].classList.remove('exit-left'), 600);
+      current = index;
+      if(index > maxUnlocked) maxUnlocked = index;
+      updateDots();
+    });
+  }
+
+  openBtn.addEventListener('click', () => {
+    burstConfetti(reduceMotion ? 30 : 90);
+    setTimeout(() => goTo(1), 500);
+  });
+
+  document.querySelectorAll('[data-next]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idxNow = current;
+      goTo(Math.min(idxNow + 1, screens.length - 1));
+    });
+  });
+  document.querySelectorAll('[data-prev]').forEach(btn => {
+    btn.addEventListener('click', () => { goTo(Math.max(current - 1, 0)); });
+  });
+  document.querySelector('[data-restart]').addEventListener('click', () => { goTo(0); });
+
+  document.getElementById('final-celebrate').addEventListener('click', (e) => {
+    const rect = e.target.getBoundingClientRect();
+    burstConfetti(reduceMotion ? 30 : 100, rect.left + rect.width/2, rect.top);
+  });
+
+  /* ================= FLIP CARDS ================= */
+  const flipCards = document.querySelectorAll('.flip-card');
+  const galleryProgress = document.getElementById('gallery-progress');
+  let openedCount = 0;
+
+  // urutan foto yang muncul di desktop (kiri-kanan): kartu 1 -> kiri atas, kartu 2 -> kanan atas, kartu 3 -> kiri bawah, kartu 4 -> kanan bawah
+  const photoOrder = ['photo-left-1', 'photo-right-1', 'photo-left-2', 'photo-right-2'];
+  // urutan foto di mode HP (tersusun vertikal, sesuai urutan kartu)
+  const mobilePhotoOrder = ['mphoto-1', 'mphoto-2', 'mphoto-3', 'mphoto-4'];
+
+  function flipCard(card, cardIndex){
+    if(!card.classList.contains('flipped')){
+      card.classList.add('flipped');
+      openedCount++;
+      galleryProgress.textContent = openedCount + ' dari ' + flipCards.length + ' kartu dibuka';
+      const rect = card.getBoundingClientRect();
+      burstConfetti(14, rect.left + rect.width/2, rect.top + rect.height/2);
+
+      const photoId = photoOrder[cardIndex];
+      if(photoId){
+        const photoEl = document.getElementById(photoId);
+        if(photoEl) photoEl.classList.add('show');
+      }
+      const mobilePhotoId = mobilePhotoOrder[cardIndex];
+      if(mobilePhotoId){
+        const mobilePhotoEl = document.getElementById(mobilePhotoId);
+        if(mobilePhotoEl) mobilePhotoEl.classList.add('show');
+      }
+    }
+  }
+  flipCards.forEach((card, i) => {
+    card.addEventListener('click', () => flipCard(card, i));
+    card.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(card, i); }
+    });
+  });
+
+  /* ================= PLAQUE SECRET NOTE ================= */
+  const plaque = document.getElementById('plaque');
+  const secretNote = document.getElementById('secret-note');
+  function toggleSecret(){
+    secretNote.classList.toggle('show');
+    if(secretNote.classList.contains('show')){
+      const rect = plaque.getBoundingClientRect();
+      burstConfetti(reduceMotion ? 12 : 40, rect.left + rect.width/2, rect.top + rect.height/2);
+    }
+  }
+  plaque.addEventListener('click', toggleSecret);
+  plaque.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleSecret(); }
+  });
+
+  /* ================= BACKSOUND (file mp3, coba autoplay langsung) ================= */
+  const bgMusic = document.getElementById('bg-music');
+  bgMusic.volume = 0.5;
+  let musicStarted = false;
+
+  function startMusicOnce(){
+    if(musicStarted) return;
+    bgMusic.play().then(() => {
+      musicStarted = true;
+      document.removeEventListener('click', startMusicOnce);
+      document.removeEventListener('scroll', startMusicOnce);
+      document.removeEventListener('touchstart', startMusicOnce);
+      document.removeEventListener('keydown', startMusicOnce);
+    }).catch(() => { /* masih diblokir browser, tunggu interaksi berikutnya */ });
+  }
+
+  // coba langsung saat halaman selesai dimuat
+  startMusicOnce();
+  window.addEventListener('load', startMusicOnce);
+
+  // fallback: kalau browser tetap blokir, nyala otomatis di interaksi pertama apa pun (tanpa tombol)
+  document.addEventListener('click', startMusicOnce);
+  document.addEventListener('scroll', startMusicOnce);
+  document.addEventListener('touchstart', startMusicOnce);
+  document.addEventListener('keydown', startMusicOnce);
+
+  updateDots();
+})();
+</script>
+
+</body>
+</html>
